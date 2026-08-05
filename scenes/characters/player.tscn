@@ -1,14 +1,26 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/characters/player.gd" id="1_player"]
+[ext_resource type="Texture2D" path="res://assets/game/farmer_basic.png" id="2_farmer"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape_player"]
 radius = 6.0
 height = 18.0
 
 [node name="Player" type="CharacterBody2D"]
+z_index = 10
 texture_filter = 1
 script = ExtResource("1_player")
+
+[node name="FarmerSprite" type="Sprite2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(0, -10)
+z_index = 1
+texture_filter = 1
+texture = ExtResource("2_farmer")
+hframes = 5
+vframes = 8
+frame = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 5)
