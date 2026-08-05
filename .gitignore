@@ -1,0 +1,24 @@
+# Godot-generated files
+.godot/
+*.tmp
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build output
+build/
+builds/
+exports/
+
+# Licensed third-party art is installed locally from the purchased archive.
+# Do not commit or redistribute the original Modern Farm PNG/GIF sources.
+assets/vendor/modern_farm/source/
+assets/vendor/modern_farm/**/*.png
+assets/vendor/modern_farm/**/*.gif
+
+# Keep documentation and the copied license notice.
+!assets/vendor/modern_farm/README.md
+!assets/vendor/modern_farm/LICENSE.txt

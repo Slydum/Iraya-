@@ -1,0 +1,58 @@
+; Engine configuration file.
+; Iraya targets Godot 4.7.1 stable.
+config_version=5
+
+[application]
+
+config/name="Iraya"
+config/description="A cozy Filipino-inspired farming and village restoration game."
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[display]
+
+window/size/viewport_width=480
+window/size/viewport_height=270
+window/size/window_width_override=1440
+window/size/window_height_override=810
+window/stretch/mode="canvas_items"
+window/handheld/orientation=1
+
+[input]
+
+move_left={
+"deadzone": 0.5,
+"events": []
+}
+move_right={
+"deadzone": 0.5,
+"events": []
+}
+move_up={
+"deadzone": 0.5,
+"events": []
+}
+move_down={
+"deadzone": 0.5,
+"events": []
+}
+sprint={
+"deadzone": 0.5,
+"events": []
+}
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=true
+textures/canvas_textures/default_texture_filter=0
+
+[physics]
+
+common/physics_ticks_per_second=60
+
+[layer_names]
+
+2d_physics/layer_1="World"
+2d_physics/layer_2="Player"

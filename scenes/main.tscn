@@ -1,0 +1,17 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/farm_world.tscn" id="1_world"]
+[ext_resource type="PackedScene" path="res://scenes/characters/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://scenes/ui/debug_hud.tscn" id="3_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/touch_controls.tscn" id="4_touch"]
+
+[node name="Main" type="Node2D"]
+
+[node name="FarmWorld" parent="." instance=ExtResource("1_world")]
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(480, 450)
+
+[node name="DebugHud" parent="." instance=ExtResource("3_hud")]
+
+[node name="TouchControls" parent="." instance=ExtResource("4_touch")]
