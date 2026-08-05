@@ -10,6 +10,11 @@ enum ActorState {
 	USING_TOOL,
 }
 
+const FARMER_TEXTURE := preload("res://assets/game/farmer_basic.png")
+const FRAME_SIZE := Vector2(48, 64)
+const WALK_FRAME_COUNT := 5
+const WALK_FRAME_TIME := 0.12
+
 @onready var farm_system: FarmSystem = get_node("../FarmSystem")
 
 var _facing := Vector2.DOWN
@@ -17,6 +22,7 @@ var _is_moving := false
 var _is_sprinting := false
 var _actor_state: int = ActorState.FREE
 var _tool_time_left := 0.0
+var _walk_animation_time := 0.0
 
 
 func _ready() -> void:
@@ -35,13 +41,12 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		if _tool_time_left <= 0.0:
 			_actor_state = ActorState.FREE
-			queue_redraw()
+		queue_redraw()
 		return
 
 	var input_direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	input_direction += Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 
-	# Physical-key checks keep WASD consistent across keyboard layouts.
 	input_direction.x += float(Input.is_physical_key_pressed(KEY_D))
 	input_direction.x -= float(Input.is_physical_key_pressed(KEY_A))
 	input_direction.y += float(Input.is_physical_key_pressed(KEY_S))
@@ -56,6 +61,9 @@ func _physics_process(delta: float) -> void:
 	_is_moving = not input_direction.is_zero_approx()
 	if _is_moving:
 		_facing = input_direction.normalized()
+		_walk_animation_time += delta * (1.45 if _is_sprinting else 1.0)
+	else:
+		_walk_animation_time = 0.0
 
 	move_and_slide()
 	farm_system.update_cursor(global_position, _facing)
@@ -117,21 +125,20 @@ func _use_selected_tool() -> void:
 
 
 func _draw() -> void:
-	# License-safe fallback character. A locally installed Modern Farm farmer
-	# sheet can replace this renderer without changing the movement/tool logic.
-	var bob := -1.0 if _is_moving and Time.get_ticks_msec() % 260 < 130 else 0.0
-	var body_color := Color("4b6f44") if not _is_sprinting else Color("5d8754")
+	var direction_index := _direction_index()
+	var row := direction_index
+	var frame := 0
 
-	draw_circle(Vector2(0, -7 + bob), 5.0, Color("d69a68"))
-	draw_rect(Rect2(-6, -3 + bob, 12, 13), body_color, true)
-	draw_rect(Rect2(-7, -13 + bob, 14, 4), Color("c89b3c"), true)
-	draw_rect(Rect2(-4, 10 + bob, 3, 5), Color("49372d"), true)
-	draw_rect(Rect2(1, 10 + bob, 3, 5), Color("49372d"), true)
+	if _is_moving:
+		row += 4
+		frame = int(_walk_animation_time / WALK_FRAME_TIME) % WALK_FRAME_COUNT
 
-	var facing_cardinal := _cardinal_direction(_facing)
-	draw_circle(facing_cardinal * 10.0 + Vector2(0, 1), 1.5, Color("fff3c4"))
+	var source_rect := Rect2(Vector2(frame * 48, row * 64), FRAME_SIZE)
+	var destination_rect := Rect2(Vector2(-24, -42), FRAME_SIZE)
+	draw_texture_rect_region(FARMER_TEXTURE, destination_rect, source_rect)
 
 	if _actor_state == ActorState.USING_TOOL:
+		var facing_cardinal := _cardinal_direction(_facing)
 		var tool_color := Color("d9c26c")
 		match farm_system.selected_tool:
 			FarmSystem.Tool.HOE:
@@ -141,6 +148,17 @@ func _draw() -> void:
 			FarmSystem.Tool.WATERING_CAN:
 				tool_color = Color("73bbc0")
 		draw_line(facing_cardinal * 5.0, facing_cardinal * 17.0, tool_color, 3.0)
+
+
+func _direction_index() -> int:
+	var cardinal := _cardinal_direction(_facing)
+	if cardinal == Vector2.UP:
+		return 1
+	if cardinal == Vector2.LEFT:
+		return 2
+	if cardinal == Vector2.RIGHT:
+		return 3
+	return 0
 
 
 func _cardinal_direction(direction: Vector2) -> Vector2:
