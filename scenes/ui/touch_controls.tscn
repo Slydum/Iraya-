@@ -1,0 +1,100 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/touch_controls.gd" id="1_touch"]
+
+[node name="TouchControls" type="CanvasLayer"]
+layer = 20
+script = ExtResource("1_touch")
+
+[node name="Root" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="UpButton" type="Button" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 74.0
+offset_top = -122.0
+offset_right = 122.0
+offset_bottom = -74.0
+focus_mode = 0
+keep_pressed_outside = true
+mouse_default_cursor_shape = 2
+modulate = Color(1, 1, 1, 0.78)
+theme_override_font_sizes/font_size = 16
+text = "▲"
+
+[node name="LeftButton" type="Button" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 26.0
+offset_top = -74.0
+offset_right = 74.0
+offset_bottom = -26.0
+focus_mode = 0
+keep_pressed_outside = true
+mouse_default_cursor_shape = 2
+modulate = Color(1, 1, 1, 0.78)
+theme_override_font_sizes/font_size = 16
+text = "◀"
+
+[node name="DownButton" type="Button" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 74.0
+offset_top = -74.0
+offset_right = 122.0
+offset_bottom = -26.0
+focus_mode = 0
+keep_pressed_outside = true
+mouse_default_cursor_shape = 2
+modulate = Color(1, 1, 1, 0.78)
+theme_override_font_sizes/font_size = 16
+text = "▼"
+
+[node name="RightButton" type="Button" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 122.0
+offset_top = -74.0
+offset_right = 170.0
+offset_bottom = -26.0
+focus_mode = 0
+keep_pressed_outside = true
+mouse_default_cursor_shape = 2
+modulate = Color(1, 1, 1, 0.78)
+theme_override_font_sizes/font_size = 16
+text = "▶"
+
+[node name="SprintButton" type="Button" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -116.0
+offset_top = -94.0
+offset_right = -26.0
+offset_bottom = -26.0
+focus_mode = 0
+keep_pressed_outside = true
+mouse_default_cursor_shape = 2
+modulate = Color(1, 1, 1, 0.78)
+theme_override_font_sizes/font_size = 14
+text = "RUN"
