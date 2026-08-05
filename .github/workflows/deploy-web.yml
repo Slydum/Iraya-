@@ -66,12 +66,8 @@ jobs:
       - name: Force mobile clients onto the latest build
         shell: bash
         run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          worker = Path("build/web/index.service.worker.js")
-          if worker.exists():
-              worker.write_text(worker.read_text() + """
+          test -s build/web/index.service.worker.js
+          cat >> build/web/index.service.worker.js <<'JS'
 
           // Activate new Iraya builds immediately so Safari and Home Screen
           // installations cannot remain pinned to an older game package.
@@ -85,21 +81,7 @@ jobs:
               ))
             );
           });
-          """)
-
-          html = Path("build/web/index.html")
-          text = html.read_text()
-          cache_script = """<script>
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistration().then((registration) => {
-              if (registration) registration.update();
-            });
-          }
-          </script>
-          """
-          text = text.replace('</head>', cache_script + '</head>')
-          html.write_text(text)
-          PY
+          JS
 
       - name: Verify web output
         shell: bash
