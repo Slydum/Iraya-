@@ -21,4 +21,4 @@ offset_right = 160.0
 offset_bottom = 76.0
 theme_override_colors/font_color = Color(0.94, 0.94, 0.82, 1)
 theme_override_font_sizes/font_size = 10
-text = "PHASE A · FARM SANDBOX\nWASD / Arrows  Move\nShift  Sprint"
+text = "PHASE A · BROWSER SANDBOX\nKeyboard / Touch  Move\nShift / RUN  Sprint"
