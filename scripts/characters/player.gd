@@ -10,7 +10,8 @@ enum ActorState {
 	USING_TOOL,
 }
 
-const WALK_FRAME_COUNT := 5
+const FARMER_SPRITE_DATA := preload("res://scripts/art/farmer_sprite_data.gd")
+const WALK_FRAME_COUNT := 6
 const WALK_FRAME_TIME := 0.12
 
 @onready var farm_system: FarmSystem = get_node("../FarmSystem")
@@ -27,6 +28,7 @@ var _walk_animation_time := 0.0
 func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 1
+	_load_farmer_texture()
 	_update_sprite_frame()
 	queue_redraw()
 
@@ -127,14 +129,23 @@ func _use_selected_tool() -> void:
 	queue_redraw()
 
 
+func _load_farmer_texture() -> void:
+	var image := Image.new()
+	var load_error := image.load_png_from_buffer(FARMER_SPRITE_DATA.get_png_bytes())
+	if load_error != OK:
+		push_error("Unable to decode embedded farmer sprite: %s" % error_string(load_error))
+		farmer_sprite.visible = false
+		return
+
+	farmer_sprite.texture = ImageTexture.create_from_image(image)
+	farmer_sprite.visible = true
+
+
 func _update_sprite_frame() -> void:
-	var row := _direction_index()
 	var frame_column := 0
 	if _is_moving and _actor_state == ActorState.FREE:
-		row += 4
-		frame_column = int(_walk_animation_time / WALK_FRAME_TIME) % WALK_FRAME_COUNT
-	farmer_sprite.frame_coords = Vector2i(frame_column, row)
-	farmer_sprite.visible = true
+		frame_column = 1 + int(_walk_animation_time / WALK_FRAME_TIME) % WALK_FRAME_COUNT
+	farmer_sprite.frame_coords = Vector2i(frame_column, _direction_index())
 
 
 func _draw() -> void:

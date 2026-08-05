@@ -41,15 +41,26 @@ jobs:
           test -s "$WEB_TEMPLATE"
           sed -i "s|custom_template/release=\"\"|custom_template/release=\"$WEB_TEMPLATE\"|" export_presets.cfg
 
-      - name: Validate project
+      - name: Validate project and resources
         shell: bash
-        run: godot --headless --editor --quit --path .
+        run: |
+          set -o pipefail
+          godot --headless --editor --quit --path . 2>&1 | tee godot-validation.log
+          if grep -E "ERR_FILE_CORRUPT|Error importing|Failed loading resource: res://|Parse Error|SCRIPT ERROR" godot-validation.log; then
+            echo "Godot reported a broken project resource."
+            exit 1
+          fi
 
       - name: Export web build
         shell: bash
         run: |
+          set -o pipefail
           mkdir -p build/web
-          godot --headless --verbose --path . --export-release "Web" build/web/index.html
+          godot --headless --verbose --path . --export-release "Web" build/web/index.html 2>&1 | tee godot-export.log
+          if grep -E "ERR_FILE_CORRUPT|Error importing|Failed loading resource: res://|Parse Error|SCRIPT ERROR" godot-export.log; then
+            echo "Godot exported with a broken resource."
+            exit 1
+          fi
           touch build/web/.nojekyll
 
       - name: Verify web output
@@ -57,7 +68,8 @@ jobs:
         run: |
           test -s build/web/index.html
           find build/web -maxdepth 1 -name '*.wasm' -size +0 | grep -q .
-          find build/web -maxdepth 1 -name '*.pck' -size +0 | grep -q .
+          find build/web -maxdepth 1 -name '*.pck' -size +30000c | grep -q .
+          grep -q 'manifest.json' build/web/index.html
 
       - name: Configure GitHub Pages
         if: github.event_name != 'pull_request'
