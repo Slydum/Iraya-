@@ -63,6 +63,26 @@ jobs:
           fi
           touch build/web/.nojekyll
 
+      - name: Force mobile clients onto the latest build
+        shell: bash
+        run: |
+          test -s build/web/index.service.worker.js
+          cat >> build/web/index.service.worker.js <<'JS'
+
+          // Activate new Iraya builds immediately so Safari and Home Screen
+          // installations cannot remain pinned to an older game package.
+          self.addEventListener('install', () => self.skipWaiting());
+          self.addEventListener('activate', (event) => {
+            event.waitUntil(
+              self.clients.claim().then(() =>
+                self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+              ).then((clients) => Promise.all(
+                clients.map((client) => client.navigate(client.url))
+              ))
+            );
+          });
+          JS
+
       - name: Verify web output
         shell: bash
         run: |
@@ -70,6 +90,7 @@ jobs:
           find build/web -maxdepth 1 -name '*.wasm' -size +0 | grep -q .
           find build/web -maxdepth 1 -name '*.pck' -size +30000c | grep -q .
           grep -q 'manifest.json' build/web/index.html
+          grep -q 'skipWaiting' build/web/index.service.worker.js
 
       - name: Configure GitHub Pages
         if: github.event_name != 'pull_request'

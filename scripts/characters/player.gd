@@ -23,6 +23,7 @@ var _is_sprinting := false
 var _actor_state: int = ActorState.FREE
 var _tool_time_left := 0.0
 var _walk_animation_time := 0.0
+var _farmer_texture_ready := false
 
 
 func _ready() -> void:
@@ -134,14 +135,20 @@ func _load_farmer_texture() -> void:
 	var load_error := image.load_png_from_buffer(FARMER_SPRITE_DATA.get_png_bytes())
 	if load_error != OK:
 		push_error("Unable to decode embedded farmer sprite: %s" % error_string(load_error))
+		_farmer_texture_ready = false
 		farmer_sprite.visible = false
+		queue_redraw()
 		return
 
 	farmer_sprite.texture = ImageTexture.create_from_image(image)
-	farmer_sprite.visible = true
+	_farmer_texture_ready = farmer_sprite.texture != null
+	farmer_sprite.visible = _farmer_texture_ready
+	queue_redraw()
 
 
 func _update_sprite_frame() -> void:
+	if not _farmer_texture_ready:
+		return
 	var frame_column := 0
 	if _is_moving and _actor_state == ActorState.FREE:
 		frame_column = 1 + int(_walk_animation_time / WALK_FRAME_TIME) % WALK_FRAME_COUNT
@@ -151,6 +158,14 @@ func _update_sprite_frame() -> void:
 func _draw() -> void:
 	# A small ground shadow keeps the character readable over soil and paths.
 	draw_circle(Vector2(0, 12), 6.0, Color(0.05, 0.07, 0.05, 0.28))
+
+	# Never leave the player invisible if a browser rejects the runtime texture.
+	if not _farmer_texture_ready:
+		draw_circle(Vector2(0, -7), 5.0, Color("d69a68"))
+		draw_rect(Rect2(-6, -3, 12, 13), Color("4b6f44"), true)
+		draw_rect(Rect2(-7, -13, 14, 4), Color("c89b3c"), true)
+		draw_rect(Rect2(-4, 10, 3, 5), Color("49372d"), true)
+		draw_rect(Rect2(1, 10, 3, 5), Color("49372d"), true)
 
 	if _actor_state == ActorState.USING_TOOL:
 		var facing_cardinal := _cardinal_direction(_facing)
