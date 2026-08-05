@@ -13,6 +13,7 @@ const ACTIONS: Array[StringName] = [
 ]
 
 @onready var root: Control = %Root
+@onready var fullscreen_button: Button = %FullscreenButton
 
 
 func _ready() -> void:
@@ -25,6 +26,7 @@ func _ready() -> void:
 	_bind_button(%ActionButton, &"interact")
 	_bind_button(%PreviousToolButton, &"tool_prev")
 	_bind_button(%NextToolButton, &"tool_next")
+	fullscreen_button.pressed.connect(_toggle_fullscreen)
 
 
 func _bind_button(button: BaseButton, action: StringName) -> void:
@@ -38,6 +40,16 @@ func _press_action(action: StringName) -> void:
 
 func _release_action(action: StringName) -> void:
 	Input.action_release(action)
+
+
+func _toggle_fullscreen() -> void:
+	var current_mode := DisplayServer.window_get_mode()
+	if current_mode == DisplayServer.WINDOW_MODE_FULLSCREEN:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+		fullscreen_button.text = "FULL"
+	else:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+		fullscreen_button.text = "EXIT"
 
 
 func _exit_tree() -> void:
