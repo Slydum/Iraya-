@@ -41,6 +41,21 @@ jobs:
           test -s "$WEB_TEMPLATE"
           sed -i "s|custom_template/release=\"\"|custom_template/release=\"$WEB_TEMPLATE\"|" export_presets.cfg
 
+      - name: Materialize Farmer 1 runtime texture
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets/runtime
+
+          for part in scripts/art/farmer_sprite_chunk_{0..7}.gd; do
+            test -s "$part"
+            sed -n 's/^const DATA := "\([A-Za-z0-9+\/=]*\)"$/\1/p' "$part"
+          done | tr -d '\n' | base64 --decode > assets/runtime/farmer_1.png
+
+          test -s assets/runtime/farmer_1.png
+          signature="$(head -c 8 assets/runtime/farmer_1.png | od -An -tx1 | tr -d ' \n')"
+          test "$signature" = "89504e470d0a1a0a"
+
       - name: Validate project and resources
         shell: bash
         run: |
@@ -50,6 +65,8 @@ jobs:
             echo "Godot reported a broken project resource."
             exit 1
           fi
+
+          find .godot/imported -name 'farmer_1.png-*.ctex' -size +0c | grep -q .
 
       - name: Export web build
         shell: bash
@@ -66,8 +83,8 @@ jobs:
       - name: Force mobile clients onto the latest build
         shell: bash
         run: |
-          test -s build/web/index.service.worker.js
-          cat >> build/web/index.service.worker.js <<'JS'
+          if test -f build/web/index.service.worker.js; then
+            cat >> build/web/index.service.worker.js <<'EOF'
 
           // Activate new Iraya builds immediately so Safari and Home Screen
           // installations cannot remain pinned to an older game package.
@@ -81,7 +98,10 @@ jobs:
               ))
             );
           });
-          JS
+          EOF
+          fi
+
+          sed -i 's#</head>#<script>if ("serviceWorker" in navigator) { navigator.serviceWorker.getRegistration().then((registration) => { if (registration) registration.update(); }); }</script></head>#' build/web/index.html
 
       - name: Verify web output
         shell: bash
