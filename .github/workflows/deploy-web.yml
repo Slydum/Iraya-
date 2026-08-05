@@ -33,9 +33,13 @@ jobs:
       - name: Install export templates
         shell: bash
         run: |
+          TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
           mkdir -p "$HOME/.local/share/godot/export_templates"
-          cp -a "/root/.local/share/godot/export_templates/${GODOT_VERSION}.stable" \
-            "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          cp -a "/root/.local/share/godot/export_templates/${GODOT_VERSION}.stable" "$TEMPLATE_DIR"
+
+          WEB_TEMPLATE="$TEMPLATE_DIR/web_nothreads_release.zip"
+          test -s "$WEB_TEMPLATE"
+          sed -i "s|custom_template/release=\"\"|custom_template/release=\"$WEB_TEMPLATE\"|" export_presets.cfg
 
       - name: Validate project
         shell: bash
