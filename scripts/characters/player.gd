@@ -14,7 +14,8 @@ func _ready() -> void:
 	queue_redraw()
 
 func _physics_process(_delta: float) -> void:
-	var input_direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	var input_direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	input_direction += Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 
 	# Physical-key checks keep WASD consistent across keyboard layouts.
 	input_direction.x += float(Input.is_physical_key_pressed(KEY_D))
@@ -23,7 +24,7 @@ func _physics_process(_delta: float) -> void:
 	input_direction.y -= float(Input.is_physical_key_pressed(KEY_W))
 	input_direction = input_direction.limit_length(1.0)
 
-	_is_sprinting = Input.is_physical_key_pressed(KEY_SHIFT)
+	_is_sprinting = Input.is_action_pressed("sprint") or Input.is_physical_key_pressed(KEY_SHIFT)
 	var speed := walk_speed * (sprint_multiplier if _is_sprinting else 1.0)
 	velocity = input_direction * speed
 
