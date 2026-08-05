@@ -1,0 +1,80 @@
+name: Build and deploy Iraya web
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages-${{ github.ref }}"
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: "4.7.1"
+
+jobs:
+  build:
+    name: Export browser build
+    runs-on: ubuntu-24.04
+    container:
+      image: barichello/godot-ci:4.7.1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install export templates
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.local/share/godot/export_templates"
+          cp -a "/root/.local/share/godot/export_templates/${GODOT_VERSION}.stable" \
+            "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+
+      - name: Validate project
+        shell: bash
+        run: godot --headless --editor --quit --path .
+
+      - name: Export web build
+        shell: bash
+        run: |
+          mkdir -p build/web
+          godot --headless --verbose --path . --export-release "Web" build/web/index.html
+          touch build/web/.nojekyll
+
+      - name: Verify web output
+        shell: bash
+        run: |
+          test -s build/web/index.html
+          find build/web -maxdepth 1 -name '*.wasm' -size +0 | grep -q .
+          find build/web -maxdepth 1 -name '*.pck' -size +0 | grep -q .
+
+      - name: Configure GitHub Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: build/web
+
+  deploy:
+    name: Deploy GitHub Pages
+    if: github.event_name != 'pull_request'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-24.04
+    needs: build
+
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5
