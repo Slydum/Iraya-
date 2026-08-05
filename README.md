@@ -8,17 +8,17 @@
 
 Every successful push to `main` exports the Godot project and deploys the generated WebAssembly build to GitHub Pages. Pull requests run the same export as a validation check without publishing it.
 
-## Phase B: Farm Tools
+## Current build
 
-The current development build adds the first interactive farming loop on top of the Phase A browser foundation:
+The current build includes:
 
-- A 16×16 interaction cursor projected from the player's facing direction
-- Four selectable tools: Hand, Hoe, Seeds, and Watering Can
-- Independent tile state for tilled, planted, and watered soil
-- Context feedback for valid and invalid actions
-- A brief player tool-use state that temporarily pauses movement
-- Keyboard and touchscreen controls for selecting and using tools
-- A procedural, license-safe public fallback while purchased art stays local
+- A browser-playable farm sandbox
+- Eight-direction movement and sprinting
+- Hand, Hoe, Seeds, and Watering Can tools
+- Tilled, planted, and watered soil states
+- Desktop and touchscreen controls
+- The real **Modern Farm Farmer 1** sprite for idle and walking animations
+- A compact, game-ready runtime sheet derived from the purchased source pack
 
 ## Controls
 
@@ -31,6 +31,18 @@ The current development build adds the first interactive farming loop on top of 
 | Use selected tool | F, Space, or Enter | USE |
 
 Recommended farming sequence: select **Hoe**, till a plot tile, plant it with **Seeds**, then use the **Watering Can**.
+
+## Sprite-pack integration
+
+Iraya uses the purchased **Modern Farm v1.2** pack by limezu. The original archive and full source sheets are not committed. Only compact runtime textures containing frames actively used by the game are included.
+
+The player runtime sheet contains:
+
+- Four directional idle poses
+- Five-frame walk cycles in four directions
+- Nearest-neighbor pixel rendering
+
+Artist credit: **limezu.itch.io**.
 
 ## Run locally
 
@@ -45,16 +57,6 @@ Command-line export:
 ```bash
 godot --headless --path . --export-release "Web" build/web/index.html
 ```
-
-## Install the asset pack locally
-
-The purchased Modern Farm source archive is intentionally not committed or deployed. Run:
-
-```bash
-python tools/import_modern_farm.py /path/to/Modern_Farm_v1.2.zip
-```
-
-See [`docs/ASSET_SETUP.md`](docs/ASSET_SETUP.md) for the selected files and licensing safeguards. The hosted build continues to use procedural fallback visuals until a license-safe final-art delivery strategy is selected.
 
 ## Project status
 
