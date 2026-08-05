@@ -10,12 +10,11 @@ enum ActorState {
 	USING_TOOL,
 }
 
-const FARMER_TEXTURE := preload("res://assets/game/farmer_basic.png")
-const FRAME_SIZE := Vector2(48, 64)
 const WALK_FRAME_COUNT := 5
 const WALK_FRAME_TIME := 0.12
 
 @onready var farm_system: FarmSystem = get_node("../FarmSystem")
+@onready var farmer_sprite: Sprite2D = %FarmerSprite
 
 var _facing := Vector2.DOWN
 var _is_moving := false
@@ -28,6 +27,7 @@ var _walk_animation_time := 0.0
 func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 1
+	_update_sprite_frame()
 	queue_redraw()
 
 
@@ -39,9 +39,10 @@ func _physics_process(delta: float) -> void:
 		_tool_time_left -= delta
 		velocity = Vector2.ZERO
 		move_and_slide()
+		_update_sprite_frame()
 		if _tool_time_left <= 0.0:
 			_actor_state = ActorState.FREE
-		queue_redraw()
+			queue_redraw()
 		return
 
 	var input_direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -67,8 +68,9 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	farm_system.update_cursor(global_position, _facing)
+	_update_sprite_frame()
 
-	if was_moving != _is_moving or _is_moving:
+	if was_moving != _is_moving:
 		queue_redraw()
 
 
@@ -121,21 +123,23 @@ func _use_selected_tool() -> void:
 	_tool_time_left = tool_action_duration
 	_is_moving = false
 	velocity = Vector2.ZERO
+	_update_sprite_frame()
 	queue_redraw()
 
 
-func _draw() -> void:
-	var direction_index := _direction_index()
-	var row := direction_index
-	var frame := 0
-
-	if _is_moving:
+func _update_sprite_frame() -> void:
+	var row := _direction_index()
+	var frame_column := 0
+	if _is_moving and _actor_state == ActorState.FREE:
 		row += 4
-		frame = int(_walk_animation_time / WALK_FRAME_TIME) % WALK_FRAME_COUNT
+		frame_column = int(_walk_animation_time / WALK_FRAME_TIME) % WALK_FRAME_COUNT
+	farmer_sprite.frame_coords = Vector2i(frame_column, row)
+	farmer_sprite.visible = true
 
-	var source_rect := Rect2(Vector2(frame * 48, row * 64), FRAME_SIZE)
-	var destination_rect := Rect2(Vector2(-24, -42), FRAME_SIZE)
-	draw_texture_rect_region(FARMER_TEXTURE, destination_rect, source_rect)
+
+func _draw() -> void:
+	# A small ground shadow keeps the character readable over soil and paths.
+	draw_circle(Vector2(0, 12), 6.0, Color(0.05, 0.07, 0.05, 0.28))
 
 	if _actor_state == ActorState.USING_TOOL:
 		var facing_cardinal := _cardinal_direction(_facing)
