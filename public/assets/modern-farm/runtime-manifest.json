@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "package": "Modern Farm v1.2",
+  "creator": "LimeZu",
+  "integration": "Iraya curated Phaser atlas",
+  "publicBoundary": "Only 162 game-facing frames used by Iraya; the complete purchased pack is not included.",
+  "cacheVersion": "mf-iraya-1",
+  "atlas": {
+    "textureKey": "modern-farm:iraya-atlas",
+    "frameCount": 162,
+    "width": 1024,
+    "height": 512,
+    "format": "lossless WebP"
+  },
+  "assets": [
+    {
+      "path": "assets/modern-farm/iraya-modern-farm.webp",
+      "bytes": 10120,
+      "sha256": "a50b7a8acae3a4153140fa12f549b81ed3c33d3edd74ff451b722bde72bf006d"
+    },
+    {
+      "path": "assets/modern-farm/iraya-modern-farm.json",
+      "bytes": 10486,
+      "sha256": "414581d16d4c692e76f0d34c28cc4a983f401f7d5c174aea6a990ea20156bd18"
+    }
+  ]
+}
