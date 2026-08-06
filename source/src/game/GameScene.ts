@@ -4,6 +4,16 @@ import { FarmState } from "./FarmState";
 import { inputBridge } from "./InputBridge";
 import { updateHud } from "./HudBridge";
 import { TileFlag, TOOL_LABELS, type Direction, type Tool } from "./types";
+import {
+  ModernFarmAtlasKey,
+  cropFrameName,
+  farmerActionDurationMs,
+  farmerAnimationKey,
+  farmerFrameName,
+  farmerToolAction,
+  loadModernFarmRuntime,
+  registerModernFarmAnimations,
+} from "../modern-farm/ModernFarmRuntime";
 
 type GameKeys = {
   w: Phaser.Input.Keyboard.Key;
@@ -24,33 +34,20 @@ type GameKeys = {
 
 const WALK_SPEED = 92;
 const SPRINT_MULTIPLIER = 1.55;
-const TOOL_LOCK_MS = 220;
-
-const IDLE_FRAMES: Record<Direction, number> = {
-  down: 0,
-  up: 7,
-  left: 14,
-  right: 21,
-};
-
-const WALK_FRAMES: Record<Direction, number[]> = {
-  down: [1, 2, 3, 4, 5, 6],
-  up: [8, 9, 10, 11, 12, 13],
-  left: [15, 16, 17, 18, 19, 20],
-  right: [22, 23, 24, 25, 26, 27],
-};
+const FARM_REFRESH_MS = 500;
 
 export class GameScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private keys!: GameKeys;
   private obstacles!: Phaser.Physics.Arcade.StaticGroup;
-  private farmGraphics!: Phaser.GameObjects.Graphics;
+  private farmTiles!: Phaser.GameObjects.Group;
   private cursorGraphics!: Phaser.GameObjects.Graphics;
-  private toolGraphics!: Phaser.GameObjects.Graphics;
   private readonly farm = new FarmState();
   private facing: Direction = "down";
   private toolLockedUntil = 0;
+  private actionPlaying = false;
+  private nextFarmRefreshAt = 0;
   private targetCell: { column: number; row: number; x: number; y: number; valid: boolean } = {
     column: -1,
     row: -1,
@@ -66,11 +63,8 @@ export class GameScene extends Phaser.Scene {
 
   preload(): void {
     const base = import.meta.env.BASE_URL;
-    this.load.image("farm-world", `${base}assets/farm_world.webp`);
-    this.load.spritesheet("farmer", `${base}assets/farmer_1.png`, {
-      frameWidth: 48,
-      frameHeight: 64,
-    });
+    this.load.image("farm-world", `${base}assets/farm_world.webp?v=8e20d0c4`);
+    loadModernFarmRuntime(this);
   }
 
   create(): void {
@@ -79,17 +73,19 @@ export class GameScene extends Phaser.Scene {
 
     this.obstacles = this.physics.add.staticGroup();
     this.createCollisions();
-    this.createAnimations();
+    registerModernFarmAnimations(this);
 
-    this.farmGraphics = this.add.graphics().setDepth(4);
+    this.farmTiles = this.add.group();
     this.cursorGraphics = this.add.graphics().setDepth(20);
-    this.toolGraphics = this.add.graphics().setDepth(21);
 
-    this.player = this.physics.add.sprite(PLAYER_START.x, PLAYER_START.y, "farmer", IDLE_FRAMES.down);
-    this.player.setDepth(10).setCollideWorldBounds(true);
-    const body = this.player.body as Phaser.Physics.Arcade.Body;
-    body.setSize(12, 18);
-    body.setOffset(18, 40);
+    this.player = this.physics.add.sprite(
+      PLAYER_START.x,
+      PLAYER_START.y,
+      ModernFarmAtlasKey,
+      farmerFrameName("idle", "down"),
+    );
+    this.player.setOrigin(0.5, 1).setDepth(10).setCollideWorldBounds(true);
+    this.alignPlayerBody();
 
     this.physics.add.collider(this.player, this.obstacles);
 
@@ -134,7 +130,7 @@ export class GameScene extends Phaser.Scene {
   update(time: number): void {
     this.handleDiscreteKeys();
 
-    const locked = time < this.toolLockedUntil;
+    const locked = this.actionPlaying || time < this.toolLockedUntil;
     const left = this.cursors.left.isDown || this.keys.a.isDown || inputBridge.isHeld("left");
     const right = this.cursors.right.isDown || this.keys.d.isDown || inputBridge.isHeld("right");
     const up = this.cursors.up.isDown || this.keys.w.isDown || inputBridge.isHeld("up");
@@ -158,29 +154,22 @@ export class GameScene extends Phaser.Scene {
     this.player.setVelocity(horizontal * speed, vertical * speed);
 
     const moving = horizontal !== 0 || vertical !== 0;
-    if (moving) {
+    if (!locked && moving) {
       this.facing = this.directionFromVector(horizontal, vertical);
-      const animation = `walk-${this.facing}`;
+      const animation = farmerAnimationKey("walk", this.facing);
       if (this.player.anims.currentAnim?.key !== animation) this.player.play(animation, true);
       this.player.anims.timeScale = sprinting ? 1.45 : 1;
-    } else {
-      this.player.anims.stop();
-      this.player.setFrame(IDLE_FRAMES[this.facing]);
+    } else if (!locked) {
+      this.showIdle();
     }
 
+    this.alignPlayerBody();
     this.updateTarget();
-    this.drawToolIndicator(locked);
     this.updateHud();
-  }
 
-  private createAnimations(): void {
-    for (const direction of Object.keys(WALK_FRAMES) as Direction[]) {
-      this.anims.create({
-        key: `walk-${direction}`,
-        frames: WALK_FRAMES[direction].map((frame) => ({ key: "farmer", frame })),
-        frameRate: 8.3,
-        repeat: -1,
-      });
+    if (time >= this.nextFarmRefreshAt) {
+      this.nextFarmRefreshAt = time + FARM_REFRESH_MS;
+      this.renderFarm();
     }
   }
 
@@ -213,20 +202,54 @@ export class GameScene extends Phaser.Scene {
   }
 
   private useTool(): void {
-    if (this.time.now < this.toolLockedUntil) return;
+    if (this.actionPlaying || this.time.now < this.toolLockedUntil) return;
     if (!this.targetCell.valid) {
       this.farm.feedback = "Face a tile inside the farm plot.";
       this.updateHud();
       return;
     }
 
+    const tool = this.farm.selectedTool;
     const changed = this.farm.interact(this.targetCell.column, this.targetCell.row);
     if (changed) {
-      this.toolLockedUntil = this.time.now + TOOL_LOCK_MS;
       this.player.setVelocity(0, 0);
+      this.playToolAnimation(tool);
     }
     this.renderFarm();
     this.updateHud();
+  }
+
+  private playToolAnimation(tool: Tool): void {
+    const action = farmerToolAction(tool);
+    const animation = farmerAnimationKey(action, this.facing);
+    const duration = farmerActionDurationMs(action);
+
+    this.actionPlaying = true;
+    this.toolLockedUntil = this.time.now + duration;
+    this.player.anims.timeScale = 1;
+    this.player.play(animation, true);
+    this.player.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+      this.actionPlaying = false;
+      this.toolLockedUntil = 0;
+      this.showIdle();
+      this.alignPlayerBody();
+    });
+  }
+
+  private showIdle(): void {
+    const frame = farmerFrameName("idle", this.facing);
+    if (this.player.texture.key === ModernFarmAtlasKey && this.player.frame.name === frame) return;
+    this.player.anims.stop();
+    this.player.setTexture(ModernFarmAtlasKey, frame);
+    this.player.anims.timeScale = 1;
+  }
+
+  private alignPlayerBody(): void {
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    const frameWidth = this.player.frame.realWidth;
+    const frameHeight = this.player.frame.realHeight;
+    body.setSize(12, 18, false);
+    body.setOffset(Math.floor((frameWidth - 12) / 2), Math.max(0, frameHeight - 18));
   }
 
   private updateTarget(): void {
@@ -253,50 +276,43 @@ export class GameScene extends Phaser.Scene {
   }
 
   private renderFarm(): void {
-    this.farmGraphics.clear();
+    this.farmTiles.clear(true, true);
+    const now = Date.now();
+
     for (const [key, state] of this.farm.cells.entries()) {
       const parts = key.split(",").map(Number);
       const column = parts[0];
       const row = parts[1];
       if (column === undefined || row === undefined) continue;
-      const x = PLOT.x + column * CELL_SIZE + 1;
-      const y = PLOT.y + row * CELL_SIZE + 1;
-      const size = CELL_SIZE - 2;
+
+      const x = PLOT.x + column * CELL_SIZE;
+      const y = PLOT.y + row * CELL_SIZE;
+      const centerX = x + CELL_SIZE / 2;
+      const centerY = y + CELL_SIZE / 2;
 
       if ((state & TileFlag.Tilled) !== 0) {
-        this.farmGraphics.fillStyle(0x76513d, 1).fillRect(x, y, size, size);
-        this.farmGraphics.lineStyle(1, 0x5e3d30, 1).lineBetween(x + 2, y + 5, x + size - 2, y + size - 9);
-        this.farmGraphics.lineStyle(1, 0x8e654d, 1).lineBetween(x + 2, y + 10, x + size - 2, y + size - 4);
+        const soil = this.add.image(
+          centerX,
+          centerY,
+          ModernFarmAtlasKey,
+          soilFrameName((state & TileFlag.Watered) !== 0),
+        ).setDepth(4);
+        this.farmTiles.add(soil);
       }
-      if ((state & TileFlag.Watered) !== 0) {
-        this.farmGraphics.fillStyle(0x1f4856, 0.42).fillRect(x, y, size, size);
-        this.farmGraphics.lineStyle(1, 0x73bbc0, 1).lineBetween(x + 3, y + 3, x + 9, y + 3);
-      }
-      if ((state & TileFlag.Seeded) !== 0) {
-        this.farmGraphics.fillStyle(0xe6c76b, 1).fillCircle(x + 5, y + 7, 1.25);
-        this.farmGraphics.fillCircle(x + 11, y + 9, 1.25);
-        this.farmGraphics.fillStyle(0xd59f45, 1).fillCircle(x + 8, y + 12, 1);
+
+      const cropStage = this.farm.cropStage(column, row, now);
+      if (cropStage) {
+        const crop = this.add.image(
+          centerX,
+          y + CELL_SIZE,
+          ModernFarmAtlasKey,
+          cropFrameName(cropStage),
+        )
+          .setOrigin(0.5, 1)
+          .setDepth(6);
+        this.farmTiles.add(crop);
       }
     }
-  }
-
-  private drawToolIndicator(locked: boolean): void {
-    this.toolGraphics.clear();
-    if (!locked) return;
-    const vector = this.facingVector();
-    const colors: Record<Tool, number> = {
-      hand: 0xd9c26c,
-      hoe: 0xb8b5aa,
-      seeds: 0xe6c76b,
-      "watering-can": 0x73bbc0,
-    };
-    this.toolGraphics.lineStyle(3, colors[this.farm.selectedTool], 1);
-    this.toolGraphics.lineBetween(
-      this.player.x + vector.x * 5,
-      this.player.y + vector.y * 5,
-      this.player.x + vector.x * 17,
-      this.player.y + vector.y * 17,
-    );
   }
 
   private updateHud(): void {
@@ -305,7 +321,9 @@ export class GameScene extends Phaser.Scene {
       x: this.player.x,
       y: this.player.y,
       tool: TOOL_LABELS[this.farm.selectedTool],
-      target: this.targetCell.valid ? `Tile ${String(this.targetCell.column + 1).padStart(2, "0")}, ${String(this.targetCell.row + 1).padStart(2, "0")}` : "Outside plot",
+      target: this.targetCell.valid
+        ? `Tile ${String(this.targetCell.column + 1).padStart(2, "0")}, ${String(this.targetCell.row + 1).padStart(2, "0")}`
+        : "Outside plot",
       tilled: counts.tilled,
       planted: counts.planted,
       watered: counts.watered,
