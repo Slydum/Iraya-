@@ -42,27 +42,33 @@ npm run build
 
 ## Current gameplay
 
-- Modern Farm Farmer 1 split idle and walking animations in four directions
+- Modern Farm Farmer 1 idle and walking animations in four directions
 - Matching digging, planting/harvesting, and watering tool animations
 - Eight-direction movement with four-direction sprite facing and sprinting
+- Animated Modern Farm chicken, dog, and cow placed in the world
 - Collision against the farmhouse, pond, trees, stumps, and world bounds
-- 16×11 farming plot rendered with real Modern Farm dry/wet soil tiles
-- Carrot seeds progress through visible growth stages after watering
+- 16×11 farming plot rendered with real Modern Farm dry and wet soil assets
+- Seven-frame carrot source sheet mapped to visible crop-growth stages
 - Ripe carrots can be harvested with the Hand tool
 - Persistent browser save for farm tile states, crop timing, and selected tool
 - Responsive desktop, portrait, and landscape touch controls
 
-## Modern Farm Phaser runtime
+## Modern Farm Phaser package integration
 
-Iraya now uses a curated Phaser-ready subset generated from the private Modern Farm v1.2 package. The game-facing exports live under:
+Iraya loads its runtime assets through the actual generated Modern Farm package API:
 
 ```text
-public/assets/modern-farm/
+source/src/modern-farm/ModernFarmLoader.ts
+source/src/modern-farm/ModernFarmKeys.ts
+public/modern-farm/manifests/
+public/modern-farm/assets/
 ```
 
-`runtime-manifest.json` records every included file, byte size, and SHA-256 checksum. The full purchased pack remains private and is not redistributed in this repository.
+At boot, Iraya fetches the package manifests before starting Phaser. Each scene then queues only the logical keys it needs and registers the package-provided animations. The selected public runtime contains 26 exact game-facing assets and 24 animations from the prepared package; the complete 11,737-asset licensed library is not committed or redistributed.
 
-The source archive can still be preserved locally with:
+The selected binary runtime is stored as checksum-locked source chunks under `asset-source/modern-farm-runtime-package/`, materialized into `public/modern-farm/assets/` by `npm run assets`, and verified against the package-provided SHA-256 values during CI. The loader, scene integration, and selected manifests are likewise checksum-locked under `asset-source/modern-farm-code-package/` and materialized before TypeScript compilation.
+
+The original purchased archive can be preserved privately with:
 
 ```bash
 python3 tools/import_modern_farm.py /path/to/Modern_Farm_v1.2.zip

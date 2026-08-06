@@ -17,7 +17,7 @@ concurrency:
 jobs:
   build:
     name: Build Phaser app
-    if: github.actor != 'github-actions[bot]' && (github.event_name == 'pull_request' || !contains(github.event.head_commit.message, '[pages-recovery]'))
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,11 +30,12 @@ jobs:
         with:
           node-version: 22
 
-      - name: Validate asset-vault importer
-        run: python3 -m py_compile tools/import_modern_farm.py
-
-      - name: Materialize verified legacy runtime images
-        run: node tools/materialize_runtime_assets.mjs
+      - name: Validate asset tools
+        run: |
+          python3 -m py_compile tools/import_modern_farm.py
+          node --check tools/materialize_runtime_assets.mjs
+          node --check tools/materialize_modern_farm_code.mjs
+          node --check tools/materialize_modern_farm_runtime.mjs
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
@@ -42,15 +43,15 @@ jobs:
       - name: Type-check and build
         run: npm run build
 
-      - name: Give the Modern Farm build a stable cache key
+      - name: Give the package-loader build a stable cache key
         run: |
           js_path="$(find dist/assets -maxdepth 1 -type f -name 'index-*.js' -print -quit)"
           test -n "$js_path"
           js_name="$(basename "$js_path")"
-          versioned_js="index-modern-farm-mf-iraya-1.js"
+          versioned_js="index-modern-farm-package-v2.js"
 
-          grep -q 'assets/farm_world.webp?v=8e20d0c4' "$js_path"
-          grep -q 'mf-iraya-1' "$js_path"
+          grep -q 'modern-farm/manifests/assets.json' "$js_path"
+          grep -q 'Modern Farm asset manifest failed' "$js_path"
           mv "$js_path" "dist/assets/$versioned_js"
           sed -i "s|assets/$js_name|assets/$versioned_js|g" dist/index.html
 
@@ -59,17 +60,21 @@ jobs:
           test -s dist/index.html
           test -s dist/assets/farm_world.webp
           test -s dist/assets/farmer_1.png
-          test -s dist/assets/runtime-manifest.json
-          test -s dist/assets/modern-farm/runtime-manifest.json
           test -s dist/manifest.webmanifest
-          test -s dist/assets/index-modern-farm-mf-iraya-1.js
-          grep -q 'assets/index-modern-farm-mf-iraya-1.js' dist/index.html
+          test -s dist/assets/index-modern-farm-package-v2.js
+          test -s dist/modern-farm/manifests/assets.json
+          test -s dist/modern-farm/manifests/animations.json
+          test -s dist/modern-farm/manifests/keys.json
+          test -s dist/modern-farm/IRAYA_RUNTIME_REPORT.json
+
+          grep -q 'assets/index-modern-farm-package-v2.js' dist/index.html
           grep -q 'assets/index-.*\.css' dist/index.html
-          grep -q 'iraya-modern-farm.webp' dist/assets/index-modern-farm-mf-iraya-1.js
-          grep -q 'iraya-modern-farm.json' dist/assets/index-modern-farm-mf-iraya-1.js
-          grep -q 'mf-iraya-1' dist/assets/index-modern-farm-mf-iraya-1.js
+          grep -q 'modern-farm/manifests/assets.json' dist/assets/index-modern-farm-package-v2.js
+          grep -q 'Modern Farm assets failed to load' dist/assets/index-modern-farm-package-v2.js
           grep -q '"orientation": "portrait-primary"' dist/manifest.webmanifest
           ! grep -q '/src/main.ts' dist/index.html
+          ! test -e dist/assets/modern-farm/iraya-modern-farm.webp
+          ! test -e dist/assets/modern-farm/iraya-modern-farm.json
 
           test "$(wc -c < dist/assets/farmer_1.png | tr -d ' ')" = "7967"
           test "$(wc -c < dist/assets/farm_world.webp | tr -d ' ')" = "11796"
@@ -81,25 +86,46 @@ jobs:
           import json
           from pathlib import Path
 
-          manifest = json.loads(Path('dist/assets/modern-farm/runtime-manifest.json').read_text())
-          for asset in manifest['assets']:
-              path = Path('dist') / asset['path']
-              assert path.is_file() and path.stat().st_size == asset['bytes'], path
+          assets_manifest = json.loads(Path('dist/modern-farm/manifests/assets.json').read_text())
+          animations_manifest = json.loads(Path('dist/modern-farm/manifests/animations.json').read_text())
+          report = json.loads(Path('dist/modern-farm/IRAYA_RUNTIME_REPORT.json').read_text())
+
+          assets = assets_manifest['assets']
+          animations = animations_manifest['animations']
+          assert len(assets) == 26, len(assets)
+          assert len(animations) == 24, len(animations)
+          assert report['sourcePackageAssets'] == 11737
+          assert report['sourcePackageAnimations'] == 3659
+          assert report['selectedAssets'] == 26
+          assert report['selectedAnimations'] == 24
+
+          for asset in assets:
+              relative = asset['path'].removeprefix('/')
+              path = Path('dist') / relative
+              assert path.is_file(), path
+              assert path.stat().st_size == asset['bytes'], path
               digest = hashlib.sha256(path.read_bytes()).hexdigest()
               assert digest == asset['sha256'], f'{path}: {digest}'
-          print(f"Verified {len(manifest['assets'])} curated Modern Farm exports.")
-          PY
 
-          file dist/assets/farmer_1.png | grep -q 'PNG image data, 336 x 256'
-          file dist/assets/farm_world.webp | grep -q 'Web/P image'
-          file dist/assets/modern-farm/iraya-modern-farm.webp | grep -q 'Web/P image'
-          python3 -m json.tool dist/assets/modern-farm/iraya-modern-farm.json >/dev/null
+          required = {
+              'characters/farmer-1/walk/down',
+              'characters/farmer-1/watering/down',
+              'crops/carrot/growth',
+              'animals/chickens-and-roosters/chicken-brown/idle/down',
+              'animals/dogs/dog-labrador-brown/idle/down',
+              'animals/cows/cow-caramel/idle/left',
+          }
+          logical_keys = {asset['logicalKey'] for asset in assets}
+          assert required <= logical_keys
+          print(f"Verified {len(assets)} exact Modern Farm package assets and {len(animations)} animations.")
+          PY
 
       - name: Publish production files to branch root
         if: github.event_name == 'push'
         run: |
-          rm -rf assets
+          rm -rf assets modern-farm
           cp -R dist/assets assets
+          cp -R dist/modern-farm modern-farm
           cp dist/index.html index.html
           cp dist/icon.svg icon.svg
           cp dist/manifest.webmanifest manifest.webmanifest
@@ -107,11 +133,11 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html assets icon.svg manifest.webmanifest .nojekyll
+          git add index.html assets modern-farm icon.svg manifest.webmanifest .nojekyll
 
           if git diff --cached --quiet; then
             echo "Production files are already current."
           else
-            git commit -m "Publish Modern Farm Phaser integration [skip ci]"
+            git commit -m "Publish real Modern Farm package integration [skip ci]"
             git push origin HEAD:main
           fi

@@ -1,10 +1,10 @@
 {
   "name": "iraya",
   "private": true,
-  "version": "0.3.1",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
-    "assets": "node tools/materialize_runtime_assets.mjs",
+    "assets": "node tools/materialize_runtime_assets.mjs && node tools/materialize_modern_farm_code.mjs && node tools/materialize_modern_farm_runtime.mjs",
     "dev": "npm run assets && vite --host 0.0.0.0",
     "build": "npm run assets && tsc -p tsconfig.json && vite build",
     "preview": "vite preview --host 0.0.0.0"
