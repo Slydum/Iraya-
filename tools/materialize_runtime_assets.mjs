@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -15,17 +15,40 @@ const assets = [
   },
   {
     name: "Iraya farm world",
-    payload: "asset-source/runtime/farm_world.webp.b64",
+    payloadPartsDir: "asset-source/runtime/farm_world",
     output: "public/assets/farm_world.webp",
     bytes: 11796,
     sha256: "8e20d0c43e3eef8c84a7f4ae4738fcc50355d7ae749deae0e35e07014357b3fd",
   },
 ];
 
+async function readEncodedPayload(asset) {
+  if (asset.payloadPartsDir) {
+    const partsDirectory = resolve(repoRoot, asset.payloadPartsDir);
+    const partNames = (await readdir(partsDirectory))
+      .filter((name) => /^part_\d+\.txt$/.test(name))
+      .sort();
+
+    if (partNames.length === 0) {
+      throw new Error(`${asset.name} has no payload chunks.`);
+    }
+
+    const parts = await Promise.all(
+      partNames.map((name) => readFile(resolve(partsDirectory, name), "utf8")),
+    );
+    return parts.join("").replace(/\s+/g, "");
+  }
+
+  if (!asset.payload) {
+    throw new Error(`${asset.name} has no payload source.`);
+  }
+
+  return (await readFile(resolve(repoRoot, asset.payload), "utf8")).replace(/\s+/g, "");
+}
+
 for (const asset of assets) {
-  const payloadPath = resolve(repoRoot, asset.payload);
   const outputPath = resolve(repoRoot, asset.output);
-  const encoded = (await readFile(payloadPath, "utf8")).replace(/\s+/g, "");
+  const encoded = await readEncodedPayload(asset);
   const bytes = Buffer.from(encoded, "base64");
   const canonical = bytes.toString("base64");
   const digest = createHash("sha256").update(bytes).digest("hex");
