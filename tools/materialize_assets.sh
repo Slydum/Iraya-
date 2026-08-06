@@ -12,8 +12,14 @@ verify_file() {
   local actual_bytes actual_sha
   actual_bytes="$(wc -c < "$output" | tr -d ' ')"
   actual_sha="$(sha256sum "$output" | cut -d ' ' -f 1)"
-  test "$actual_bytes" = "$expected_bytes"
-  test "$actual_sha" = "$expected_sha"
+  if [[ "$actual_bytes" != "$expected_bytes" ]]; then
+    echo "$output has $actual_bytes bytes; expected $expected_bytes." >&2
+    exit 1
+  fi
+  if [[ "$actual_sha" != "$expected_sha" ]]; then
+    echo "$output checksum mismatch: $actual_sha" >&2
+    exit 1
+  fi
   echo "Created verified $output"
 }
 
@@ -21,11 +27,11 @@ farmer_payload="$(mktemp)"
 world_payload="$(mktemp)"
 trap 'rm -f "$farmer_payload" "$world_payload"' EXIT
 
-for part in asset-source/farmer/chunk_{0..7}.gd; do
+for part in asset-source/farmer/part_*.txt; do
   test -s "$part"
-  sed -n 's/^const DATA := "\([A-Za-z0-9+\/=]*\)"$/\1/p' "$part" >> "$farmer_payload"
+  tr -d '\r\n' < "$part" >> "$farmer_payload"
 done
-tr -d '\r\n' < "$farmer_payload" | base64 --decode > public/assets/farmer_1.png
+base64 --decode < "$farmer_payload" > public/assets/farmer_1.png
 verify_file public/assets/farmer_1.png 7967 0cc99b2b727e7487ae7de1c6390fed5120182d030cc53f3f88b4f6a0e2bd84cc
 
 for part in asset-source/world/part_*.txt; do
