@@ -2,5 +2,6 @@
   "build": "modern-farm-mf-iraya-1",
   "productionCommit": "d0a51b882ff8095612336f0aa2f5d2b1a1320486",
   "sourceCommit": "208fb7f3cf2d97c4570545a5a161b3fcc91f7fa9",
-  "runtimeAtlasFrames": 162
+  "runtimeAtlasFrames": 162,
+  "pagesRecoveryAttempt": 2
 }
