@@ -17,7 +17,7 @@ concurrency:
 jobs:
   build:
     name: Build Phaser app
-    if: github.actor != 'github-actions[bot]'
+    if: github.actor != 'github-actions[bot]' && (github.event_name == 'pull_request' || !contains(github.event.head_commit.message, '[pages-recovery]'))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
