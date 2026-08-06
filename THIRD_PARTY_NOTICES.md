@@ -4,7 +4,7 @@
 
 - Creator: LimeZu
 - Credit: limezu.itch.io
-- Use in Iraya: compact Farmer 1 movement/tool animation sheets, farm soil tiles, carrot growth sprites, and compact farm-world artwork
+- Use in Iraya: selected Farmer 1 movement/tool sheets, carrot growth, dry/wet soil, and animal animations loaded through the package's Phaser manifest API; plus compact farm-world artwork
 - Source archive: Purchased separately; not included in this repository
 
 License summary supplied with the pack:
@@ -13,4 +13,4 @@ License summary supplied with the pack:
 - Reselling or distributing the asset pack to others is not allowed.
 - Editing and reselling the asset pack to others is not allowed.
 
-Iraya includes only the limited game-ready textures required by the game, not the complete purchased pack. The curated runtime subset is inventoried in `public/assets/modern-farm/runtime-manifest.json`.
+Iraya includes only 26 exact game-facing runtime assets required by the current scene, not the complete 11,737-asset purchased package. The curated selection and source-package totals are recorded in `public/modern-farm/IRAYA_RUNTIME_REPORT.json` and the selected files are checksummed in `public/modern-farm/manifests/assets.json`.
