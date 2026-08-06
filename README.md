@@ -1,64 +1,56 @@
 # Iraya
 
-**Iraya** is a cozy pixel-art farming and village-restoration game set on a fictional Filipino-inspired mountainside.
+Iraya is a browser-first 2D farming prototype built with Phaser 3, TypeScript, and Vite.
 
-## Play in the browser
+## Play
 
-**https://slydum.github.io/Iraya-/**
+The production build is published through GitHub Pages:
 
-Every successful push to `main` exports the Godot project and deploys the generated WebAssembly build to GitHub Pages. Pull requests run the same export as a validation check without publishing it.
-
-## Current build
-
-The current build includes:
-
-- A browser-playable farm sandbox
-- Eight-direction movement and sprinting
-- Hand, Hoe, Seeds, and Watering Can tools
-- Tilled, planted, and watered soil states
-- Desktop and touchscreen controls
-- The real **Modern Farm Farmer 1** sprite for idle and walking animations
-- A compact, game-ready runtime sheet derived from the purchased source pack
+`https://slydum.github.io/Iraya-/`
 
 ## Controls
 
-| Action | Desktop | Touchscreen |
-| --- | --- | --- |
-| Move | WASD or arrow keys | Directional pad |
-| Sprint | Hold Shift | Hold RUN |
-| Previous / next tool | Q / E | `< TOOL` / `TOOL >` |
-| Select tool directly | 1–4 | Cycle with tool buttons |
-| Use selected tool | F, Space, or Enter | USE |
+### Desktop
 
-Recommended farming sequence: select **Hoe**, till a plot tile, plant it with **Seeds**, then use the **Watering Can**.
+- WASD or arrow keys: move
+- Shift: sprint
+- Q / E: previous or next tool
+- 1–4: Hand, Hoe, Seeds, Watering Can
+- F, Space, or Enter: use selected tool
 
-## Sprite-pack integration
+### Mobile
 
-Iraya uses the purchased **Modern Farm v1.2** pack by limezu. The original archive and full source sheets are not committed. Only compact runtime textures containing frames actively used by the game are included.
+- D-pad: move
+- RUN: sprint
+- `< TOOL` / `TOOL >`: change tool
+- USE: use selected tool
 
-The player runtime sheet contains:
+For the closest full-screen iPhone experience, add the game to the Home Screen and launch it in landscape.
 
-- Four directional idle poses
-- Five-frame walk cycles in four directions
-- Nearest-neighbor pixel rendering
-
-Artist credit: **limezu.itch.io**.
-
-## Run locally
-
-1. Install Godot **4.7.1 stable** and its export templates.
-2. Clone the repository.
-3. Open `project.godot` in Godot.
-4. Press **F5** to run the game.
-5. To test the browser build, export the `Web` preset to `build/web/index.html` and serve that directory with a local web server.
-
-Command-line export:
+## Development
 
 ```bash
-godot --headless --path . --export-release "Web" build/web/index.html
+npm install
+npm run dev
 ```
 
-## Project status
+Production build:
 
-- [Phase A — Browser Farm Sandbox](docs/PHASE_A.md)
-- [Phase B — Farm Tools](docs/PHASE_B.md)
+```bash
+npm run build
+```
+
+## Current gameplay
+
+- Four-direction Farmer 1 idle and walking animations
+- Eight-direction movement with four-direction sprite facing
+- Sprinting
+- Collision against the farmhouse, pond, trees, stumps, and world bounds
+- 16×11 farming plot
+- Hand, hoe, seeds, and watering can
+- Persistent browser save for farm tile states and selected tool
+- Responsive desktop and touch controls
+
+## Asset boundary
+
+Iraya ships only compact, game-ready images assembled from the licensed Modern Farm v1.2 pack. The purchased source archive and complete source sheets are not included in the repository.
