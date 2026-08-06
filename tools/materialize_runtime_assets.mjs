@@ -15,7 +15,7 @@ const assets = [
   },
   {
     name: "Iraya farm world",
-    payloadPartsDir: "asset-source/runtime/farm_world",
+    payloadPartsDir: "asset-source/runtime/farm_world_exact",
     output: "public/assets/farm_world.webp",
     bytes: 11796,
     sha256: "8e20d0c43e3eef8c84a7f4ae4738fcc50355d7ae749deae0e35e07014357b3fd",
