@@ -14,7 +14,7 @@ mkdir -p "$(dirname "$target_file")"
 payload_file="$(mktemp)"
 trap 'rm -f "$payload_file"' EXIT
 
-for part in tools/data/farm_world_webp_chunk_{0..3}.txt; do
+for part in tools/data/farm_world_webp_part_{00..08}.txt; do
   test -s "$part"
   tr -d '\r\n' < "$part" >> "$payload_file"
 done
