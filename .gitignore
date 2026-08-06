@@ -2,6 +2,4 @@ node_modules/
 dist/
 .vite/
 .DS_Store
-public/assets/farmer_1.png
-public/assets/farm_world.webp
 npm-debug.log*

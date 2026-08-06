@@ -19,7 +19,11 @@ Iraya was migrated from Godot 4 to Phaser 3, TypeScript, and Vite because the pr
 - Sprite sheets are ordinary PNG files sliced directly by Phaser.
 - Farm progress is saved in `localStorage`.
 - The PWA manifest requests landscape fullscreen when launched from the Home Screen.
-- There is no WebAssembly, `.pck`, Godot import cache, or engine-specific texture conversion.
+- There is no WebAssembly, `.pck`, Godot import cache, engine-specific texture conversion, or asset-generation step.
+
+## Asset boundary
+
+The repository includes only two compact game-ready textures: the Farmer 1 runtime atlas and Iraya's authored world image. It does not include the purchased Modern Farm source archive or complete source sheets.
 
 ## Next art pass
 
