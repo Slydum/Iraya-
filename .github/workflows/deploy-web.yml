@@ -33,6 +33,9 @@ jobs:
       - name: Validate asset-vault importer
         run: python3 -m py_compile tools/import_modern_farm.py
 
+      - name: Materialize verified runtime images
+        run: node tools/materialize_runtime_assets.mjs
+
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
@@ -50,6 +53,12 @@ jobs:
           grep -q 'assets/index-.*\.css' dist/index.html
           grep -q '"orientation": "portrait-primary"' dist/manifest.webmanifest
           ! grep -q '/src/main.ts' dist/index.html
+          test "$(wc -c < dist/assets/farmer_1.png | tr -d ' ')" = "7967"
+          test "$(wc -c < dist/assets/farm_world.webp | tr -d ' ')" = "11796"
+          echo '0cc99b2b727e7487ae7de1c6390fed5120182d030cc53f3f88b4f6a0e2bd84cc  dist/assets/farmer_1.png' | sha256sum --check --strict
+          echo '8e20d0c43e3eef8c84a7f4ae4738fcc50355d7ae749deae0e35e07014357b3fd  dist/assets/farm_world.webp' | sha256sum --check --strict
+          file dist/assets/farmer_1.png | grep -q 'PNG image data, 336 x 256'
+          file dist/assets/farm_world.webp | grep -q 'Web/P image'
 
       - name: Publish production files to branch root
         if: github.event_name == 'push'
@@ -68,6 +77,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "Production files are already current."
           else
-            git commit -m "Publish Phaser web build [skip ci]"
+            git commit -m "Publish verified Phaser web build [skip ci]"
             git push origin HEAD:main
           fi
