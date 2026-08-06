@@ -42,23 +42,30 @@ npm run build
 
 ## Current gameplay
 
-- Four-direction Farmer 1 idle and walking animations
-- Eight-direction movement with four-direction sprite facing
-- Sprinting
+- Modern Farm Farmer 1 split idle and walking animations in four directions
+- Matching digging, planting/harvesting, and watering tool animations
+- Eight-direction movement with four-direction sprite facing and sprinting
 - Collision against the farmhouse, pond, trees, stumps, and world bounds
-- 16×11 farming plot
-- Hand, hoe, seeds, and watering can
-- Persistent browser save for farm tile states and selected tool
+- 16×11 farming plot rendered with real Modern Farm dry/wet soil tiles
+- Carrot seeds progress through visible growth stages after watering
+- Ripe carrots can be harvested with the Hand tool
+- Persistent browser save for farm tile states, crop timing, and selected tool
 - Responsive desktop, portrait, and landscape touch controls
 
-## Modern Farm asset preservation
+## Modern Farm Phaser runtime
 
-The full purchased Modern Farm v1.2 pack is preserved through a private local vault rather than being redistributed in this public repository.
+Iraya now uses a curated Phaser-ready subset generated from the private Modern Farm v1.2 package. The game-facing exports live under:
+
+```text
+public/assets/modern-farm/
+```
+
+`runtime-manifest.json` records every included file, byte size, and SHA-256 checksum. The full purchased pack remains private and is not redistributed in this repository.
+
+The source archive can still be preserved locally with:
 
 ```bash
 python3 tools/import_modern_farm.py /path/to/Modern_Farm_v1.2.zip
 ```
 
-This keeps the exact archive, extracts every source file, and writes a SHA-256 inventory under the Git-ignored `local-assets/vendor/modern_farm_v1_2/` directory. See `docs/ASSET_PACK.md` for the complete workflow.
-
-The published game contains only compact, game-ready runtime exports required by Iraya.
+See `docs/ASSET_PACK.md` for the private-vault workflow.
