@@ -1,7 +1,15 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/farm_world.gd" id="1_world"]
+[ext_resource type="Texture2D" path="res://assets/runtime/world/farm_world.webp" id="2_world_art"]
 
 [node name="FarmWorld" type="Node2D"]
 texture_filter = 1
 script = ExtResource("1_world")
+
+[node name="WorldArt" type="Sprite2D" parent="."]
+position = Vector2(0, 0)
+z_index = -10
+texture_filter = 1
+texture = ExtResource("2_world_art")
+centered = false

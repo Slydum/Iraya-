@@ -56,10 +56,17 @@ jobs:
           signature="$(head -c 8 assets/runtime/farmer_1.png | od -An -tx1 | tr -d ' \n')"
           test "$signature" = "89504e470d0a1a0a"
 
+      - name: Materialize Modern Farm world texture
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/materialize_world_texture.sh
+
       - name: Validate project and resources
         shell: bash
         run: |
           set -o pipefail
+          test -s assets/runtime/world/farm_world.webp
           godot --headless --editor --quit --path . 2>&1 | tee godot-validation.log
           if grep -E "ERR_FILE_CORRUPT|Error importing|Failed loading resource: res://|Parse Error|SCRIPT ERROR" godot-validation.log; then
             echo "Godot reported a broken project resource."
@@ -67,6 +74,7 @@ jobs:
           fi
 
           find .godot/imported -name 'farmer_1.png-*.ctex' -size +0c | grep -q .
+          find .godot/imported -name 'farm_world.webp-*.ctex' -size +0c | grep -q .
 
       - name: Export web build
         shell: bash
