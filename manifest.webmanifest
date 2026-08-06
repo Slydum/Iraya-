@@ -1,0 +1,19 @@
+{
+  "name": "Iraya",
+  "short_name": "Iraya",
+  "description": "A portrait-first browser farming game.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait-primary",
+  "background_color": "#294a32",
+  "theme_color": "#294a32",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
