@@ -1,0 +1,19 @@
+{
+  "name": "iraya",
+  "private": true,
+  "version": "0.3.0",
+  "type": "module",
+  "scripts": {
+    "prepare-assets": "bash tools/materialize_assets.sh",
+    "dev": "npm run prepare-assets && vite --host 0.0.0.0",
+    "build": "npm run prepare-assets && tsc -p tsconfig.json && vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2",
+    "vite": "^8.1.5"
+  }
+}
