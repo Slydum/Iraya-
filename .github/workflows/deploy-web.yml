@@ -65,8 +65,9 @@ jobs:
           test -s dist/assets/index-modern-farm-mf-iraya-1.js
           grep -q 'assets/index-modern-farm-mf-iraya-1.js' dist/index.html
           grep -q 'assets/index-.*\.css' dist/index.html
-          grep -q 'modern-farm/iraya-modern-farm.webp' dist/assets/index-modern-farm-mf-iraya-1.js
-          grep -q 'modern-farm/iraya-modern-farm.json' dist/assets/index-modern-farm-mf-iraya-1.js
+          grep -q 'iraya-modern-farm.webp' dist/assets/index-modern-farm-mf-iraya-1.js
+          grep -q 'iraya-modern-farm.json' dist/assets/index-modern-farm-mf-iraya-1.js
+          grep -q 'mf-iraya-1' dist/assets/index-modern-farm-mf-iraya-1.js
           grep -q '"orientation": "portrait-primary"' dist/manifest.webmanifest
           ! grep -q '/src/main.ts' dist/index.html
 
