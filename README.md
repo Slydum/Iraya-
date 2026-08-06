@@ -8,6 +8,8 @@ The production build is published through GitHub Pages:
 
 `https://slydum.github.io/Iraya-/`
 
+The mobile build is portrait-first. For the most app-like iPhone experience, add the game to the Home Screen and launch it vertically.
+
 ## Controls
 
 ### Desktop
@@ -20,12 +22,10 @@ The production build is published through GitHub Pages:
 
 ### Mobile
 
-- D-pad: move
+- Portrait D-pad: move
 - RUN: sprint
 - `< TOOL` / `TOOL >`: change tool
 - USE: use selected tool
-
-For the closest full-screen iPhone experience, add the game to the Home Screen and launch it in landscape.
 
 ## Development
 
@@ -49,8 +49,16 @@ npm run build
 - 16×11 farming plot
 - Hand, hoe, seeds, and watering can
 - Persistent browser save for farm tile states and selected tool
-- Responsive desktop and touch controls
+- Responsive desktop, portrait, and landscape touch controls
 
-## Asset boundary
+## Modern Farm asset preservation
 
-Iraya ships only compact, game-ready images assembled from the licensed Modern Farm v1.2 pack. The purchased source archive and complete source sheets are not included in the repository.
+The full purchased Modern Farm v1.2 pack is preserved through a private local vault rather than being redistributed in this public repository.
+
+```bash
+python3 tools/import_modern_farm.py /path/to/Modern_Farm_v1.2.zip
+```
+
+This keeps the exact archive, extracts every source file, and writes a SHA-256 inventory under the Git-ignored `local-assets/vendor/modern_farm_v1_2/` directory. See `docs/ASSET_PACK.md` for the complete workflow.
+
+The published game contains only compact, game-ready runtime exports required by Iraya.

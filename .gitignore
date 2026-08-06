@@ -1,5 +1,6 @@
 node_modules/
 dist/
 .vite/
+local-assets/
 .DS_Store
 npm-debug.log*

@@ -40,8 +40,10 @@ jobs:
           test -s dist/index.html
           test -s dist/assets/farm_world.webp
           test -s dist/assets/farmer_1.png
+          test -s dist/assets/runtime-manifest.json
           test -s dist/manifest.webmanifest
           grep -q "Iraya" dist/index.html
+          grep -q '"orientation": "portrait-primary"' dist/manifest.webmanifest
 
       - name: Configure GitHub Pages
         if: github.event_name != 'pull_request'
