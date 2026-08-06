@@ -1,10 +1,10 @@
 name: Build and deploy Iraya web
 
 on:
-  pull_request:
-    branches: ["main"]
   push:
-    branches: ["main"]
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -13,122 +13,45 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages-${{ github.ref }}"
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
-
-env:
-  GODOT_VERSION: "4.7.1"
 
 jobs:
   build:
-    name: Export browser build
-    runs-on: ubuntu-24.04
-    container:
-      image: barichello/godot-ci:4.7.1
-
+    name: Build Phaser app
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
-      - name: Install export templates
-        shell: bash
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Type-check and build
+        run: npm run build
+
+      - name: Verify browser output
         run: |
-          TEMPLATE_DIR="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
-          mkdir -p "$HOME/.local/share/godot/export_templates"
-          cp -a "/root/.local/share/godot/export_templates/${GODOT_VERSION}.stable" "$TEMPLATE_DIR"
-
-          WEB_TEMPLATE="$TEMPLATE_DIR/web_nothreads_release.zip"
-          test -s "$WEB_TEMPLATE"
-          sed -i "s|custom_template/release=\"\"|custom_template/release=\"$WEB_TEMPLATE\"|" export_presets.cfg
-
-      - name: Materialize Farmer 1 runtime texture
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p assets/runtime
-
-          for part in scripts/art/farmer_sprite_chunk_{0..7}.gd; do
-            test -s "$part"
-            sed -n 's/^const DATA := "\([A-Za-z0-9+\/=]*\)"$/\1/p' "$part"
-          done | tr -d '\n' | base64 --decode > assets/runtime/farmer_1.png
-
-          test -s assets/runtime/farmer_1.png
-          signature="$(head -c 8 assets/runtime/farmer_1.png | od -An -tx1 | tr -d ' \n')"
-          test "$signature" = "89504e470d0a1a0a"
-
-      - name: Materialize Modern Farm world texture
-        shell: bash
-        run: |
-          set -euo pipefail
-          bash tools/materialize_world_texture.sh
-
-      - name: Validate project and resources
-        shell: bash
-        run: |
-          set -o pipefail
-          test -s assets/runtime/world/farm_world.webp
-          godot --headless --editor --quit --path . 2>&1 | tee godot-validation.log
-          if grep -E "ERR_FILE_CORRUPT|Error importing|Failed loading resource: res://|Parse Error|SCRIPT ERROR" godot-validation.log; then
-            echo "Godot reported a broken project resource."
-            exit 1
-          fi
-
-          find .godot/imported -name 'farmer_1.png-*.ctex' -size +0c | grep -q .
-          find .godot/imported -name 'farm_world.webp-*.ctex' -size +0c | grep -q .
-
-      - name: Export web build
-        shell: bash
-        run: |
-          set -o pipefail
-          mkdir -p build/web
-          godot --headless --verbose --path . --export-release "Web" build/web/index.html 2>&1 | tee godot-export.log
-          if grep -E "ERR_FILE_CORRUPT|Error importing|Failed loading resource: res://|Parse Error|SCRIPT ERROR" godot-export.log; then
-            echo "Godot exported with a broken resource."
-            exit 1
-          fi
-          touch build/web/.nojekyll
-
-      - name: Force mobile clients onto the latest build
-        shell: bash
-        run: |
-          if test -f build/web/index.service.worker.js; then
-            cat >> build/web/index.service.worker.js <<'EOF'
-
-          // Activate new Iraya builds immediately so Safari and Home Screen
-          // installations cannot remain pinned to an older game package.
-          self.addEventListener('install', () => self.skipWaiting());
-          self.addEventListener('activate', (event) => {
-            event.waitUntil(
-              self.clients.claim().then(() =>
-                self.clients.matchAll({ type: 'window', includeUncontrolled: true })
-              ).then((clients) => Promise.all(
-                clients.map((client) => client.navigate(client.url))
-              ))
-            );
-          });
-          EOF
-          fi
-
-          sed -i 's#</head>#<script>if ("serviceWorker" in navigator) { navigator.serviceWorker.getRegistration().then((registration) => { if (registration) registration.update(); }); }</script></head>#' build/web/index.html
-
-      - name: Verify web output
-        shell: bash
-        run: |
-          test -s build/web/index.html
-          find build/web -maxdepth 1 -name '*.wasm' -size +0 | grep -q .
-          find build/web -maxdepth 1 -name '*.pck' -size +30000c | grep -q .
-          grep -q 'manifest.json' build/web/index.html
-          grep -q 'skipWaiting' build/web/index.service.worker.js
+          test -s dist/index.html
+          test -s dist/assets/farm_world.webp
+          test -s dist/assets/farmer_1.png
+          test -s dist/manifest.webmanifest
+          grep -q "Iraya" dist/index.html
 
       - name: Configure GitHub Pages
         if: github.event_name != 'pull_request'
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: build/web
+          path: dist
 
   deploy:
     name: Deploy GitHub Pages
@@ -136,10 +59,9 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     needs: build
-
     steps:
       - name: Deploy
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@v4
