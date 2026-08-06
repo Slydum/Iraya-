@@ -5,6 +5,23 @@ import { inputBridge } from "./InputBridge";
 import { updateHud } from "./HudBridge";
 import { TileFlag, TOOL_LABELS, type Direction, type Tool } from "./types";
 
+type GameKeys = {
+  w: Phaser.Input.Keyboard.Key;
+  a: Phaser.Input.Keyboard.Key;
+  s: Phaser.Input.Keyboard.Key;
+  d: Phaser.Input.Keyboard.Key;
+  shift: Phaser.Input.Keyboard.Key;
+  q: Phaser.Input.Keyboard.Key;
+  e: Phaser.Input.Keyboard.Key;
+  one: Phaser.Input.Keyboard.Key;
+  two: Phaser.Input.Keyboard.Key;
+  three: Phaser.Input.Keyboard.Key;
+  four: Phaser.Input.Keyboard.Key;
+  f: Phaser.Input.Keyboard.Key;
+  space: Phaser.Input.Keyboard.Key;
+  enter: Phaser.Input.Keyboard.Key;
+};
+
 const WALK_SPEED = 92;
 const SPRINT_MULTIPLIER = 1.55;
 const TOOL_LOCK_MS = 220;
@@ -26,7 +43,7 @@ const WALK_FRAMES: Record<Direction, number[]> = {
 export class GameScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-  private keys!: Record<string, Phaser.Input.Keyboard.Key>;
+  private keys!: GameKeys;
   private obstacles!: Phaser.Physics.Arcade.StaticGroup;
   private farmGraphics!: Phaser.GameObjects.Graphics;
   private cursorGraphics!: Phaser.GameObjects.Graphics;
@@ -99,7 +116,7 @@ export class GameScene extends Phaser.Scene {
       f: Phaser.Input.Keyboard.KeyCodes.F,
       space: Phaser.Input.Keyboard.KeyCodes.SPACE,
       enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
-    }) as Record<string, Phaser.Input.Keyboard.Key>;
+    }) as GameKeys;
 
     this.unsubscribeTouch = inputBridge.subscribe((action) => {
       if (action === "tool-prev") this.farm.cycleTool(-1);
