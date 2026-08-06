@@ -33,7 +33,7 @@ jobs:
       - name: Validate asset-vault importer
         run: python3 -m py_compile tools/import_modern_farm.py
 
-      - name: Materialize verified runtime images
+      - name: Materialize verified legacy runtime images
         run: node tools/materialize_runtime_assets.mjs
 
       - name: Install dependencies
@@ -42,17 +42,15 @@ jobs:
       - name: Type-check and build
         run: npm run build
 
-      - name: Version repaired runtime assets
+      - name: Give the Modern Farm build a stable cache key
         run: |
           js_path="$(find dist/assets -maxdepth 1 -type f -name 'index-*.js' -print -quit)"
           test -n "$js_path"
           js_name="$(basename "$js_path")"
-          versioned_js="index-runtime-8e20d0c4-0cc99b2b.js"
+          versioned_js="index-modern-farm-mf-iraya-1.js"
 
-          grep -q 'assets/farm_world.webp' "$js_path"
-          grep -q 'assets/farmer_1.png' "$js_path"
-          sed -i 's|assets/farm_world.webp|assets/farm_world.webp?v=8e20d0c4|g' "$js_path"
-          sed -i 's|assets/farmer_1.png|assets/farmer_1.png?v=0cc99b2b|g' "$js_path"
+          grep -q 'assets/farm_world.webp?v=8e20d0c4' "$js_path"
+          grep -q 'mf-iraya-1' "$js_path"
           mv "$js_path" "dist/assets/$versioned_js"
           sed -i "s|assets/$js_name|assets/$versioned_js|g" dist/index.html
 
@@ -62,20 +60,40 @@ jobs:
           test -s dist/assets/farm_world.webp
           test -s dist/assets/farmer_1.png
           test -s dist/assets/runtime-manifest.json
+          test -s dist/assets/modern-farm/runtime-manifest.json
           test -s dist/manifest.webmanifest
-          test -s dist/assets/index-runtime-8e20d0c4-0cc99b2b.js
-          grep -q 'assets/index-runtime-8e20d0c4-0cc99b2b.js' dist/index.html
+          test -s dist/assets/index-modern-farm-mf-iraya-1.js
+          grep -q 'assets/index-modern-farm-mf-iraya-1.js' dist/index.html
           grep -q 'assets/index-.*\.css' dist/index.html
-          grep -q 'assets/farm_world.webp?v=8e20d0c4' dist/assets/index-runtime-8e20d0c4-0cc99b2b.js
-          grep -q 'assets/farmer_1.png?v=0cc99b2b' dist/assets/index-runtime-8e20d0c4-0cc99b2b.js
+          grep -q 'iraya-modern-farm.webp' dist/assets/index-modern-farm-mf-iraya-1.js
+          grep -q 'iraya-modern-farm.json' dist/assets/index-modern-farm-mf-iraya-1.js
+          grep -q 'mf-iraya-1' dist/assets/index-modern-farm-mf-iraya-1.js
           grep -q '"orientation": "portrait-primary"' dist/manifest.webmanifest
           ! grep -q '/src/main.ts' dist/index.html
+
           test "$(wc -c < dist/assets/farmer_1.png | tr -d ' ')" = "7967"
           test "$(wc -c < dist/assets/farm_world.webp | tr -d ' ')" = "11796"
           echo '0cc99b2b727e7487ae7de1c6390fed5120182d030cc53f3f88b4f6a0e2bd84cc  dist/assets/farmer_1.png' | sha256sum --check --strict
           echo '8e20d0c43e3eef8c84a7f4ae4738fcc50355d7ae749deae0e35e07014357b3fd  dist/assets/farm_world.webp' | sha256sum --check --strict
+
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path('dist/assets/modern-farm/runtime-manifest.json').read_text())
+          for asset in manifest['assets']:
+              path = Path('dist') / asset['path']
+              assert path.is_file() and path.stat().st_size == asset['bytes'], path
+              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              assert digest == asset['sha256'], f'{path}: {digest}'
+          print(f"Verified {len(manifest['assets'])} curated Modern Farm exports.")
+          PY
+
           file dist/assets/farmer_1.png | grep -q 'PNG image data, 336 x 256'
           file dist/assets/farm_world.webp | grep -q 'Web/P image'
+          file dist/assets/modern-farm/iraya-modern-farm.webp | grep -q 'Web/P image'
+          python3 -m json.tool dist/assets/modern-farm/iraya-modern-farm.json >/dev/null
 
       - name: Publish production files to branch root
         if: github.event_name == 'push'
@@ -94,6 +112,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "Production files are already current."
           else
-            git commit -m "Publish cache-busted Phaser web build [skip ci]"
+            git commit -m "Publish Modern Farm Phaser integration [skip ci]"
             git push origin HEAD:main
           fi
