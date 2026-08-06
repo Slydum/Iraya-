@@ -314,7 +314,12 @@ export class GameScene extends Phaser.Scene {
   }
 
   private resizeCamera(size: Phaser.Structs.Size): void {
-    const zoom = Math.max(1, Math.min(size.width / WORLD_WIDTH, size.height / WORLD_HEIGHT));
+    const widthRatio = size.width / WORLD_WIDTH;
+    const heightRatio = size.height / WORLD_HEIGHT;
+    const portrait = size.height >= size.width;
+    const zoom = portrait
+      ? Math.max(widthRatio, heightRatio)
+      : Math.max(0.75, Math.min(widthRatio, heightRatio));
     this.cameras.main.setZoom(zoom);
   }
 

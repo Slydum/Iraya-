@@ -38,7 +38,8 @@ canvas {
   left: max(10px, env(safe-area-inset-left));
   display: grid;
   gap: 3px;
-  max-width: min(390px, 58vw);
+  width: fit-content;
+  max-width: min(390px, calc(100vw - 92px));
   padding: 10px 12px;
   border: 1px solid rgb(255 255 255 / 16%);
   border-radius: 8px;
@@ -77,12 +78,23 @@ canvas {
   pointer-events: none;
 }
 
+#touch-controls::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 190px;
+  background: linear-gradient(to top, rgb(8 18 12 / 42%), transparent);
+  pointer-events: none;
+}
+
 .control {
-  border: 1px solid rgb(255 255 255 / 22%);
-  border-radius: 11px;
-  color: rgb(255 255 255 / 86%);
-  background: rgb(22 42 28 / 62%);
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 8%);
+  border: 1px solid rgb(255 255 255 / 24%);
+  border-radius: 12px;
+  color: rgb(255 255 255 / 90%);
+  background: rgb(22 42 28 / 68%);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 10%), 0 4px 10px rgb(0 0 0 / 16%);
   font: 700 15px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
   pointer-events: auto;
   touch-action: none;
@@ -90,7 +102,7 @@ canvas {
 
 .control.active,
 .control:active {
-  background: rgb(198 171 91 / 76%);
+  background: rgb(198 171 91 / 82%);
   transform: translateY(1px);
 }
 
@@ -124,28 +136,74 @@ canvas {
   font-size: 18px;
 }
 
-#rotate-hint {
-  display: none;
-  position: fixed;
-  z-index: 50;
-  inset: 0;
-  place-items: center;
-  padding: 30px;
-  text-align: center;
-  color: #fff9df;
-  background: rgb(13 28 18 / 94%);
-  font-size: 18px;
-}
-
 @media (pointer: coarse), (hover: none) {
   #touch-controls { display: block; }
 }
 
-@media (orientation: portrait) and (max-width: 760px) {
-  #rotate-hint { display: grid; }
+@media (orientation: portrait) {
+  #hud {
+    top: max(8px, env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    max-width: calc(100vw - 78px - env(safe-area-inset-left) - env(safe-area-inset-right));
+    padding: 8px 9px;
+    font-size: clamp(10px, 2.8vw, 13px);
+  }
+
+  #fullscreen {
+    top: max(8px, env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+    min-width: 54px;
+    min-height: 36px;
+    font-size: 12px;
+  }
+
+  #touch-controls::before {
+    height: 220px;
+  }
+
+  .dpad {
+    left: max(10px, env(safe-area-inset-left));
+    bottom: max(16px, env(safe-area-inset-bottom));
+    grid-template-columns: repeat(3, 58px);
+    grid-template-rows: repeat(2, 58px);
+    gap: 5px;
+  }
+
+  .dpad .control {
+    font-size: 19px;
+  }
+
+  .actions {
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
+    grid-template-columns: repeat(2, minmax(70px, 82px));
+    grid-template-rows: repeat(2, 54px);
+    gap: 7px;
+  }
+
+  .actions .control {
+    font-size: 12px;
+  }
+
+  .actions .run,
+  .actions .use {
+    font-size: 17px;
+  }
 }
 
-@media (max-height: 450px) {
+@media (orientation: portrait) and (max-width: 370px) {
+  .dpad {
+    grid-template-columns: repeat(3, 51px);
+    grid-template-rows: repeat(2, 51px);
+  }
+
+  .actions {
+    grid-template-columns: repeat(2, 66px);
+    grid-template-rows: repeat(2, 48px);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 450px) {
   #hud {
     max-width: min(350px, 48vw);
     padding: 7px 9px;

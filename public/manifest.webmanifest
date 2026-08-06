@@ -1,11 +1,11 @@
 {
   "name": "Iraya",
   "short_name": "Iraya",
-  "description": "A browser-first pixel farming game.",
+  "description": "A portrait-first browser farming game.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
-  "orientation": "landscape",
+  "orientation": "portrait-primary",
   "background_color": "#294a32",
   "theme_color": "#294a32",
   "icons": [

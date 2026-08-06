@@ -29,6 +29,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Validate asset-vault importer
+        run: python3 -m py_compile tools/import_modern_farm.py
+
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
@@ -40,8 +43,11 @@ jobs:
           test -s dist/index.html
           test -s dist/assets/farm_world.webp
           test -s dist/assets/farmer_1.png
+          test -s dist/assets/runtime-manifest.json
           test -s dist/manifest.webmanifest
           grep -q "Iraya" dist/index.html
+          grep -q '"orientation": "portrait-primary"' dist/manifest.webmanifest
+          ! grep -q "rotate-hint" dist/index.html
 
       - name: Configure GitHub Pages
         if: github.event_name != 'pull_request'
