@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#294a32" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Iraya" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <title>Iraya</title>
+  </head>
+  <body>
+    <main id="app" aria-label="Iraya farming game">
+      <div id="game" aria-label="Game canvas"></div>
+
+      <section id="hud" aria-live="polite">
+        <strong>IRAYA · FARM TOOLS</strong>
+        <span id="hud-position">Position 480, 450</span>
+        <span id="hud-tool">Tool Hoe · Outside plot</span>
+        <span id="hud-progress">Tilled 0 · Planted 0 · Watered 0</span>
+        <span id="hud-feedback">Choose a tool and work the field.</span>
+      </section>
+
+      <button id="fullscreen" type="button" aria-label="Enter fullscreen">FULL</button>
+
+      <section id="touch-controls" aria-label="Touch controls">
+        <div class="dpad" aria-label="Movement controls">
+          <button class="control up" data-hold="up" aria-label="Move up">U</button>
+          <button class="control left" data-hold="left" aria-label="Move left">L</button>
+          <button class="control down" data-hold="down" aria-label="Move down">D</button>
+          <button class="control right" data-hold="right" aria-label="Move right">R</button>
+        </div>
+
+        <div class="actions" aria-label="Farm controls">
+          <button class="control tool-prev" data-tap="tool-prev">&lt; TOOL</button>
+          <button class="control tool-next" data-tap="tool-next">TOOL &gt;</button>
+          <button class="control run" data-hold="run">RUN</button>
+          <button class="control use" data-tap="use">USE</button>
+        </div>
+      </section>
+
+      <aside id="rotate-hint">Rotate your phone to landscape for the best view.</aside>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
