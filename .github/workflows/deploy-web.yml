@@ -42,6 +42,20 @@ jobs:
       - name: Type-check and build
         run: npm run build
 
+      - name: Version repaired runtime assets
+        run: |
+          js_path="$(find dist/assets -maxdepth 1 -type f -name 'index-*.js' -print -quit)"
+          test -n "$js_path"
+          js_name="$(basename "$js_path")"
+          versioned_js="index-runtime-8e20d0c4-0cc99b2b.js"
+
+          grep -q 'assets/farm_world.webp' "$js_path"
+          grep -q 'assets/farmer_1.png' "$js_path"
+          sed -i 's|assets/farm_world.webp|assets/farm_world.webp?v=8e20d0c4|g' "$js_path"
+          sed -i 's|assets/farmer_1.png|assets/farmer_1.png?v=0cc99b2b|g' "$js_path"
+          mv "$js_path" "dist/assets/$versioned_js"
+          sed -i "s|assets/$js_name|assets/$versioned_js|g" dist/index.html
+
       - name: Verify production output
         run: |
           test -s dist/index.html
@@ -49,8 +63,11 @@ jobs:
           test -s dist/assets/farmer_1.png
           test -s dist/assets/runtime-manifest.json
           test -s dist/manifest.webmanifest
-          grep -q 'assets/index-.*\.js' dist/index.html
+          test -s dist/assets/index-runtime-8e20d0c4-0cc99b2b.js
+          grep -q 'assets/index-runtime-8e20d0c4-0cc99b2b.js' dist/index.html
           grep -q 'assets/index-.*\.css' dist/index.html
+          grep -q 'assets/farm_world.webp?v=8e20d0c4' dist/assets/index-runtime-8e20d0c4-0cc99b2b.js
+          grep -q 'assets/farmer_1.png?v=0cc99b2b' dist/assets/index-runtime-8e20d0c4-0cc99b2b.js
           grep -q '"orientation": "portrait-primary"' dist/manifest.webmanifest
           ! grep -q '/src/main.ts' dist/index.html
           test "$(wc -c < dist/assets/farmer_1.png | tr -d ' ')" = "7967"
@@ -77,6 +94,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "Production files are already current."
           else
-            git commit -m "Publish verified Phaser web build [skip ci]"
+            git commit -m "Publish cache-busted Phaser web build [skip ci]"
             git push origin HEAD:main
           fi
