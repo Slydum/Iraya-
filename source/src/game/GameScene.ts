@@ -13,6 +13,7 @@ import {
   farmerToolAction,
   loadModernFarmRuntime,
   registerModernFarmAnimations,
+  soilFrameName,
 } from "../modern-farm/ModernFarmRuntime";
 
 type GameKeys = {
